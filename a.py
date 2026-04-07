@@ -5,7 +5,7 @@ path = os.path.expanduser(
     "~/dev/lsp_base/spoon-jdt-lsp/src/main/java/com/lsp/spoon/SpoonLanguageServer.java"
 )
 
-# El nuevo contenido del archivo con las mejoras de SRP y Seguridad
+# El código corregido (sin el import erróneo en la línea 16)
 new_code = r"""package com.lsp.spoon;
 
 import org.eclipse.lsp4j.*;
@@ -21,7 +21,6 @@ import spoon.reflect.declaration.*;
 import spoon.reflect.code.*;
 import spoon.reflect.visitor.filter.TypeFilter;
 import spoon.reflect.cu.SourcePosition;
-import spoon.reflect.CtElement;
 
 public class SpoonLanguageServer implements LanguageServer, LanguageClientAware {
     private LanguageClient client;
@@ -106,7 +105,7 @@ public class SpoonLanguageServer implements LanguageServer, LanguageClientAware 
             }
 
             private String getContainerName(CtLiteral<?> lit) {
-                CtElement p = lit.getParent();
+                spoon.reflect.declaration.CtElement p = lit.getParent();
                 if (p instanceof CtVariable) return ((CtVariable<?>) p).getSimpleName().toLowerCase();
                 if (p instanceof CtAssignment) return ((CtAssignment<?, ?>) p).getAssigned().toString().toLowerCase();
                 return "";
@@ -123,7 +122,7 @@ public class SpoonLanguageServer implements LanguageServer, LanguageClientAware 
                 );
             }
 
-            private int calculateMaxLoopDepth(CtElement element) {
+            private int calculateMaxLoopDepth(spoon.reflect.declaration.CtElement element) {
                 int max = 0;
                 List<CtLoop> loops = element.getElements(new TypeFilter<>(CtLoop.class));
                 for (CtLoop loop : loops) {
@@ -155,6 +154,6 @@ public class SpoonLanguageServer implements LanguageServer, LanguageClientAware 
 try:
     with open(path, "w", encoding="utf-8") as f:
         f.write(new_code)
-    print(f"✅ Archivo actualizado con éxito en: {path}")
+    print(f"✅ Archivo corregido con éxito en: {path}")
 except Exception as e:
     print(f"❌ Error al escribir el archivo: {e}")
