@@ -1,1 +1,79 @@
-Esta documentación técnica detalla el procedimiento exacto para realizar la verificación formal de seguridad en el código bancario utilizando JBMC 6.8.0, basándose en las opciones disponibles en el sistema.[27;5;106~1. Comando de Ejecución Realizado[27;5;106~Para generar el reporte de vulnerabilidad en formato legible por máquinas, se utilizó la siguiente sintaxis:[27;5;106~[27;5;106~Bash[27;5;106~[27;5;106~[27;5;106~jbmc ProcesadorPagosBancarios \[27;5;106~     --classpath . \[27;5;106~     --function ProcesadorPagosBancarios.verificarIntegridadSaldos \[27;5;106~     --unwind 6 \[27;5;106~     --json-ui[27;5;106~[27;5;106~[27;5;106~Desglose de Parámetros Utilizados:[27;5;106~ProcesadorPagosBancarios: El nombre de la clase compilada (.class). Es el argumento principal.[27;5;106~--classpath .: Define la ruta de búsqueda de archivos. El punto . indica que la clase está en el directorio actual.[27;5;106~--function [nombre]: Define el Punto de Entrada. A diferencia de un programa normal que inicia en main, JBMC permite elegir cualquier método para analizarlo como si fuera la raíz.[27;5;106~--unwind 6: Opción de BMC (Bounded Model Checking). Obliga a JBMC a expandir los ciclos for e if hasta 6 niveles de profundidad. Esto permitió analizar las 5 transacciones del lote bancario.[27;5;106~--json-ui: Cambia la interfaz de salida de texto plano a JSON. Fundamental para la integración con herramientas de seguridad automatizadas.[27;5;106~2. Posibilidades de Análisis (Según Documentación)[27;5;106~Basado en el jbmc --help, existen tres categorías principales de ejecución según el objetivo:[27;5;106~A. Diagnóstico de Propiedades (--show-properties)[27;5;106~Antes de correr el análisis pesado, se usa para listar qué es lo que JBMC va a intentar "romper".[27;5;106~Uso: jbmc Clase --show-properties[27;5;106~Resultado: Muestra todos los assert, revisiones de punteros nulos y límites de arreglos que JBMC ha identificado.[27;5;106~B. Análisis de Fallos Detallado (--trace)[27;5;106~Si prefieres una lectura humana en lugar de JSON, esta es la opción estándar.[27;5;106~Uso: jbmc Clase --function Metodo --trace[27;5;106~Resultado: Si la verificación falla, muestra paso a paso los valores de las variables en la consola hasta llegar al error.[27;5;106~C. Control de Complejidad (--unwind y --depth)[27;5;106~Indispensable para manejar programas complejos con bucles o recursividad.[27;5;106~--unwind N: Límite para ciclos.[27;5;106~--depth N: Límite total de pasos de ejecución simbólica. Previene que el verificador consuma toda la RAM en grafos de ejecución infinitos.[27;5;106~3. Matriz de Formatos de Salida (UI Options)[27;5;106~JBMC ofrece tres formas de reportar resultados, seleccionables al final del comando:[27;5;106~Opción[27;5;106~Formato[27;5;106~Caso de Uso Ideal[27;5;106~(Ninguna)[27;5;106~Texto Plano[27;5;106~Revisión rápida por el desarrollador.[27;5;106~--json-ui[27;5;106~JSON[27;5;106~Integración con CI/CD, Dashboards y Scripts de Python.[27;5;106~--xml-ui[27;5;106~XML[27;5;106~Sistemas legados o herramientas de reporte basadas en XML.[27;5;106~[27;5;106~4. Opciones de Seguridad Avanzadas (Bytecode Frontend)[27;5;106~En el menú de ayuda se listan opciones críticas para entornos bancarios que no activamos pero son altamente recomendadas:[27;5;106~--java-assume-inputs-non-null: Asume que los parámetros de entrada nunca son nulos. Evita falsos positivos si sabes que tu framework (como Spring) ya valida nulos.[27;5;106~--throw-assertion-error: En lugar de que JBMC marque un "FAILURE" directo, hace que el programa lance una excepción real de Java. Útil para depurar el comportamiento del runtime.[27;5;106~--max-nondet-array-length N: Limita el tamaño de los arreglos generados aleatoriamente por JBMC para probar tu código (por defecto es 5).[27;5;106~5. Resumen del Flujo de Trabajo[27;5;106~Compilación: Se genera el bytecode con javac.[27;5;106~Configuración: Se elige el método crítico (ej. el cálculo de saldos).[27;5;106~Ejecución: Se corre JBMC con el límite de ciclos (--unwind) adecuado.[27;5;106~Captura: Se redirige el JSON a un archivo: jbmc ... --json-ui > reporte.json.[27;5;106~Esta metodología asegura que ningún desbordamiento aritmético pase a producción, cumpliendo con los estándares de auditoría informática más estrictos en México (como los requeridos por la CNBV).[27;5;106~¿Te gustaría que personalizáramos un script de automatización para que el pipeline falle automáticamente si el JSON contiene un "status": "FAILURE"?[27;5;106~
+Aquí tienes la documentación limpia, con los caracteres de control de terminal eliminados y el formato corregido para su lectura técnica:
+
+---
+
+# Documentación Técnica: Verificación Formal con JBMC 6.8.0
+
+Esta documentación técnica detalla el procedimiento exacto para realizar la verificación formal de seguridad en el código bancario utilizando **JBMC 6.8.0**, basándose en las opciones disponibles en el sistema.
+
+## 1. Comando de Ejecución Realizado
+
+Para generar el reporte de vulnerabilidad en formato legible por máquinas, se utilizó la siguiente sintaxis en Bash:
+
+```bash
+jbmc ProcesadorPagosBancarios \
+     --classpath . \
+     --function ProcesadorPagosBancarios.verificarIntegridadSaldos \
+     --unwind 6 \
+     --json-ui
+```
+
+### Desglose de Parámetros Utilizados:
+* **`ProcesadorPagosBancarios`**: El nombre de la clase compilada (`.class`). Es el argumento principal.
+* **`--classpath .`**: Define la ruta de búsqueda de archivos. El punto `.` indica que la clase está en el directorio actual.
+* **`--function [nombre]`**: Define el Punto de Entrada. A diferencia de un programa normal que inicia en `main`, JBMC permite elegir cualquier método para analizarlo como si fuera la raíz.
+* **`--unwind 6`**: Opción de **BMC (Bounded Model Checking)**. Obliga a JBMC a expandir los ciclos `for` e `if` hasta 6 niveles de profundidad. Esto permitió analizar las 5 transacciones del lote bancario.
+* **`--json-ui`**: Cambia la interfaz de salida de texto plano a JSON. Fundamental para la integración con herramientas de seguridad automatizadas.
+
+---
+
+## 2. Posibilidades de Análisis (Según Documentación)
+
+Basado en el comando `jbmc --help`, existen tres categorías principales de ejecución según el objetivo:
+
+### A. Diagnóstico de Propiedades (`--show-properties`)
+Antes de correr el análisis pesado, se usa para listar qué es lo que JBMC va a intentar "romper".
+* **Uso:** `jbmc Clase --show-properties`
+* **Resultado:** Muestra todos los `assert`, revisiones de punteros nulos y límites de arreglos que JBMC ha identificado.
+
+### B. Análisis de Fallos Detallado (`--trace`)
+Si prefieres una lectura humana en lugar de JSON, esta es la opción estándar.
+* **Uso:** `jbmc Clase --function Metodo --trace`
+* **Resultado:** Si la verificación falla, muestra paso a paso los valores de las variables en la consola hasta llegar al error.
+
+### C. Control de Complejidad (`--unwind` y `--depth`)
+Indispensable para manejar programas complejos con bucles o recursividad.
+* **`--unwind N`**: Límite para ciclos.
+* **`--depth N`**: Límite total de pasos de ejecución simbólica. Previene que el verificador consuma toda la RAM en grafos de ejecución infinitos.
+
+---
+
+## 3. Matriz de Formatos de Salida (UI Options)
+
+JBMC ofrece tres formas de reportar resultados, seleccionables al final del comando:
+
+| Opción | Formato | Caso de Uso Ideal |
+| :--- | :--- | :--- |
+| (Ninguna) | Texto Plano | Revisión rápida por el desarrollador. |
+| `--json-ui` | JSON | Integración con CI/CD, Dashboards y Scripts de Python. |
+| `--xml-ui` | XML | Sistemas legados o herramientas de reporte basadas en XML. |
+
+---
+
+## 4. Opciones de Seguridad Avanzadas (Bytecode Frontend)
+
+En el menú de ayuda se listan opciones críticas para entornos bancarios que son altamente recomendadas:
+* **`--java-assume-inputs-non-null`**: Asume que los parámetros de entrada nunca son nulos. Evita falsos positivos si el framework ya valida nulos.
+* **`--throw-assertion-error`**: En lugar de que JBMC marque un "FAILURE" directo, hace que el programa lance una excepción real de Java.
+* **`--max-nondet-array-length N`**: Limita el tamaño de los arreglos generados aleatoriamente por JBMC para probar el código (por defecto es 5).
+
+---
+
+## 5. Resumen del Flujo de Trabajo
+
+1.  **Compilación**: Se genera el bytecode con `javac`.
+2.  **Configuración**: Se elige el método crítico (ej. el cálculo de saldos).
+3.  **Ejecución**: Se corre JBMC con el límite de ciclos (`--unwind`) adecuado.
+4.  **Captura**: Se redirige el JSON a un archivo: `jbmc ... --json-ui > reporte.json`.
+
+Esta metodología asegura que ningún desbordamiento aritmético pase a producción, cumpliendo con los estándares de auditoría informática más estrictos (como los requeridos por la CNBV en México).
